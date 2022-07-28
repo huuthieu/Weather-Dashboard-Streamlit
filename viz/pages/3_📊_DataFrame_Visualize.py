@@ -39,10 +39,14 @@ with col2:
 df = get_data()
 data = df[(df.Province == option2) & (df.Year == int(option1))]
 
+
+rename_dict = {u: u + " " + "(" + v + ")" for u, v in unit_mapping.items()}
+data.rename(columns=rename_dict, inplace=True)
+
 # data /= 1000000.0
 st.write("### Weather Data of Vietnam", data.sort_index())
 
-data = data.T.reset_index()
+# data = data.T.reset_index()
 # data = pd.melt(data, id_vars=["index"]).rename(
 #     columns={"index": "year", "value": "Gross Agricultural Product ($B)"}
 # )

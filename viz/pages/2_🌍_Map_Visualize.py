@@ -104,7 +104,7 @@ with st.spinner('Wait for it...'):
 
     title = Title()
     # Tùy theo giá trị muốn vẽ mà thay đổi tiêu đề cho phù hợp
-    title.text = f"Temperature of Vietnam on {month_dict[option2]}"
+    title.text = f"{option3} of Vietnam on {month_dict[option2]}"
     title.text_font_size = '16pt'
     title.align = "center"
 

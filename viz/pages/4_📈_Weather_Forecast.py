@@ -4,135 +4,121 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+from utils import *
+import datetime
+import re
+from models import *
+from preprocess import *
+
 
 st.set_page_config(page_title="Forecast", page_icon="📈")
 
 st.markdown("# Forecast")
 st.sidebar.header("Forecast")
 st.write(
-    """This demo illustrates a combination of plotting and animation with
-Streamlit. We're generating a bunch of random numbers in a loop for around
-5 seconds. Enjoy!"""
+    """This is a demo of our weather forecast dashboard. We will display current weather values and make predictions for the near future. Enjoy!"""
 )
-
-
 import plotly.io as pio
 from plotly.subplots import make_subplots
 
-dataset_path = "/home/primedo/hcmus/DA/Datascience_2016-2/data/weather_data_hcm_[2017-2022]_preprocess.csv"
+option = st.selectbox(
+    'Choose province',
+    tuple(list_provinces))
 
-# @st.experimental_memo
-def get_data(year) -> pd.DataFrame:
-    dataset_path = f"../../data/{year}/weather_data_VietNam_[{year}].csv"
-    return pd.read_csv(dataset_path)
+province = pd.read_excel("/home/primedo/hcmus/DA/Datascience_2016-2/data_sung/tinhthanh.xlsx")
+province_dict = dict(zip(province.columns, province.iloc[0]))
 
 
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    option1 = st.selectbox(
-     'Choose year',
-     ('2021', '2020',"2019","2018","2017"))
+url = "https://www.worldweatheronline.com/Can-Tho-weather/vn.aspx"
+url = url.replace("Can-Tho", province_dict[option])
+r = requests.get(url)
+soup = BeautifulSoup(r.text, "html.parser")
 
-with col2:
-    # st.subheader("Choose month")
-    option2 = st.selectbox(
-     'Choose month',
-     ('1', '2',"3","4","5","6","7","8","9","10","11","12"))
+print("ok")
+now = datetime.datetime.now()
 
-with col3:
-    # st.subheader("Choose feature")
-    option3 = st.selectbox(
-     'Choose day',
-     ('1', '2',"3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31"))
+st.markdown(
+    f"<p style='color: #FF5733; "
+    f"font-weight: bold; font-size: 25px;'> 📍 Weather at {option} currently </p>",
+    unsafe_allow_html=True,
+)
 
-with col4:
-    # st.subheader("Choose province")
-    option4 = st.selectbox(
-     'Choose province',
-     ('An Giang',
- 'Bà Rịa - Vũng Tàu',
- 'Bắc Giang',
- 'Bắc Kạn',
- 'Bạc Liêu',
- 'Bắc Ninh',
- 'Bến Tre',
- 'Bình Định',
- 'Bình Dương',
- 'Bình Phước',
- 'Bình Thuận',
- 'Cà Mau',
- 'Cần Thơ',
- 'Cao Bằng',
- 'Đà Nẵng',
- 'Đắk Lắk',
- 'Đắk Nông', 
-'Điện Biên',
- 'Đồng Nai',
- 'Đồng Tháp',
- 'Gia Lai',
- 'Hà Giang',
- 'Hà Nam',
- 'Hà Nội',
- 'Hà Tĩnh',
- 'Hải Dương',
- 'Hải Phòng',
- 'Hậu Giang',
-'Thành phố Hồ Chí Minh',
- 'Hòa Bình',
- 'Hưng Yên',
- 'Khánh Hòa',
- 'Kiên Giang',
- 'Kon Tum',
- 'Lai Châu',
- 'Lâm Đồng',
- 'Lạng Sơn',
-  'Lào Cai',
- 'Long An',
- 'Nam Định',
- 'Nghệ An',
- 'Ninh Bình',
- 'Ninh Thuận',
- 'Phú Thọ',
- 'Phú Yên',
- 'Quảng Bình',
- 'Quảng Nam',
- 'Quảng Ngãi',
- 'Quảng Ninh',
- 'Quảng Trị',
- 'Sóc Trăng',
- 'Sơn La',
- 'Tây Ninh',
- 'Thái Bình',
-'Thái Nguyên',
- 'Thanh Hóa',
- 'Thừa Thiên Huế',
- 'Tiền Giang',
- 'Trà Vinh',
- 'Tuyên Quang',
- 'Vĩnh Long',
- 'Vĩnh Phúc',
- 'Yên Bái'))
+with st.spinner('Wait for it...'):
+    temperature = soup.find_all("div",{"class":"weather-widget-temperature"})[0].find_all("p")[0].text.strip()
+    # wind_speed = soup.find_all("span", {"class": "wind-speed"})[0].text
+    weather =  soup.find_all("div",{"class":"weather-widget-icon"})[0].find_all("p")[0].text.strip()
+    feats = soup.find_all("div",{"class":"ws-details-item"})
+    wind_speed = feats[0].find_all("span")[0].text.strip()
+    dir = feats[0].find_all("img")[0]["style"]
+    dir = re.findall("\(.*\)",dir)[0].strip('(deg)')
+    rain = feats[1].find_all("span")[0].text.strip()
+    cloud = feats[2].find_all("span")[0].text.strip()
+    humidity = feats[3].find_all("span")[0].text.strip()
+    pressure, dew_point = get_data_msn(option)    
+    # a = soup.find_all("div",{"class":"wind-direction"})[0].find_all("img")[0]
+    # dir = re.findall("\(.*\)",a["style"])[0].strip('(deg)')
+    # st.markdown(f"#### ☁️ Weather: {weather}")
+    col1, col2 = st.columns(2)
+    col1.markdown("#### " + now.strftime("%d/%m/%Y"))
+    col1.markdown("##### " + now.strftime("%H:%M"))
+    col2.metric("☁️ Weather", weather)
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        col1.metric("🌡️ Temperature",f"{temperature}°C")
+        col1.metric("💨 Wind Speed",f"{wind_speed}")
+    with col2:
+        col2.metric("💧 Rain",f"{rain}")
+        col2.metric("💨 Wind Dir",f"{dir}°")
+        
+    with col3:
+        col3.metric("💦 Humidity",f"{humidity}")
+        col3.metric("🕗 Pressure",f"{pressure}")
+    with col4:
+        col4.metric("☁️ Cloud",f"{cloud}")
+        col4.metric("🌡️ Dew Point",f"{dew_point}")
 
-df = get_data(option1)
+# st.markdown("![](https://www.worldweatheronline.com/staticv150817/assets-202110/img/wind-direction.svg)")
+# st.metric("☔ Rain Alert", "Rain")
+st.markdown(
+    f"<p style='color: #FF5733; "
+    f"font-weight: bold; font-size: 25px;'> 📍 Alert in next 3 hours </p>",
+    unsafe_allow_html=True,
+)
 
-df = df[(df.Province == option4) & (df.Day == int(option3)) & (df.Month == int(option2))]
+df = pd.read_csv("../../data/vietnam/vietnam_[2017-2022]_fix.csv")
+# genre = st.radio(
+#     "",
+#      options = ('Annualy', 'Monthly'))
+gust = 0.0
+feature_vals = [humidity, dew_point, temperature, rain, cloud, wind_speed, dir, pressure, gust, weather]
+print(feature_vals)
 
-df = df.drop(columns = ["Province","Day","Month","year"])
+dict_test = dict(zip(list_features, feature_vals))
 
-# print(df)
+time_h = rounding_time(now.hour)
+if len(str(time_h)) == 1:
+    time = "0" + str(time_h) + ":00"
+else:
+    time = str(time_h) + ":00"
 
-# data
-pio.templates.default = "plotly_white"
-cols = df.columns[3:-1]
-ncols = len(cols)
+dict_test.update({"Day": int(now.strftime("%d")),
+                 "Month": int(now.strftime("%m")),
+                    "Year": int(now.strftime("%Y")),
+                    "Time": time})
 
-# subplot setup
-fig = make_subplots(rows=ncols, cols=1, shared_xaxes=True)
 
-for i, col in enumerate(cols, start=1):
-    fig.add_trace(go.Scatter(name = col, x=df["Time"], y=df[col].values), row=i, col=1)
+data_test = pd.DataFrame([dict_test])
 
-fig.update_layout(width=800, height=1000)
-fig.for_each_trace(lambda t: t.update(textfont_size=30, textposition='top center'))
+data_test = process_data(data_test)
 
-st.plotly_chart(fig)
+res = pipeline(df, data_test, option)
+
+if res < 0.5:
+    label = "No Rain"
+else: 
+    label = "Rain"
+st.metric("☔ Rain Alert", f"{label}")
+# st.markdown("### ☔ Rain Alert in next 3 hours: Rain")
+

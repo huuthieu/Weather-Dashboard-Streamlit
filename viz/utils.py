@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.express as px
 import seaborn as sns
+import requests
+from bs4 import BeautifulSoup
+import time
 
 
 list_provinces = ['An Giang','Bà Rịa - Vũng Tàu','Bắc Giang','Bắc Kạn','Bạc Liêu','Bắc Ninh',
@@ -53,7 +56,17 @@ name_dict_ve = dict(zip(list_provinces, list_eng_province))
 
 name_dict_ev = dict(zip(list_eng_province, list_provinces))
 
+unit_mapping = {"Humidity": "%", "Dew point": "°C", "Temperature": "°C", "Rain": "mm", "Cloud": "%", "Wind": "km/h", "Dir": "°", "Pressure": "mb", "Gust": "km/h"}
 
+def rounding_time(hour):
+    time_list = [0, 3, 6, 9, 12, 15, 18, 21]
+    min_dis = 30
+    round_h = 0
+    for i in range(len(time_list)):
+        if abs(hour - time_list[i]) < min_dis:
+            min_dis = abs(hour - time_list[i])
+            round_h = time_list[i]
+    return int(round_h)
 
 def formatDate(HCM_df):
     # Changing Formatted Date from String to Datetime
@@ -107,7 +120,7 @@ def compareWithNationalInDay(VN_df, prv, col):
         # title='Compare the national average '+ col +  ' with ' + prv,
         width = 900,
         xaxis_title="Days",
-        yaxis_title=col,
+        yaxis_title=col + ' ' + '(' + unit_mapping[col] + ')',
         legend_title="Note",
         font=dict(
             family="Courier New, monospace",
@@ -139,7 +152,7 @@ def plotVNdataDay(VN_df, col):
         # title='Compare the national average '+ col +  ' with ' + prv,
         width = 900,
         xaxis_title="Days",
-        yaxis_title=col,
+        yaxis_title=col + ' ' + '(' + unit_mapping[col] + ')',
         font=dict(
             family="Courier New, monospace",
             size=18))
@@ -158,7 +171,7 @@ def plotVNdataMonth(VN_df, col):
         # title='Compare the national average '+ col +  ' with ' + prv,
         width = 900,
         xaxis_title="Month",
-        yaxis_title=col,
+        yaxis_title=col + ' ' + '(' + unit_mapping[col] + ')',
         font=dict(
             family="Courier New, monospace",
             size=18))
@@ -189,7 +202,7 @@ def compareWithNationalInMonth(VN_df, prv, col):
         # title='Compare the national average '+ col +  ' with ' + prv,
         width = 900,
         xaxis_title="Month",
-        yaxis_title=col,
+        yaxis_title=col + ' ' + '(' + unit_mapping[col] + ')',
         legend_title="Note",
         font=dict(
             family="Courier New, monospace",
@@ -234,7 +247,7 @@ def PLotMinMaxDay(VN_df, prov, col):
         width = 800,
         title=col+" Plot",
         xaxis_title="Days",
-        yaxis_title=col,
+        yaxis_title=col + ' ' + '(' + unit_mapping[col] + ')',
         legend_title="Note",
         font=dict(
             family="Courier New, monospace",
@@ -277,7 +290,7 @@ def PLotMinMaxMonth(VN_df, prv, col):
         width = 800,
         title=col+" Plot",
         xaxis_title="Months",
-        yaxis_title=col,
+        yaxis_title=col + ' ' + '(' + unit_mapping[col] + ')',
         legend_title="Note",
         font=dict(
             family="Courier New, monospace",
@@ -298,7 +311,7 @@ def plotCountAndDistribution(data, feat_name):
     sns.set(font_scale=1.3)
     fig = plt.figure(figsize = (8,4))
     b= sns.distplot(data, color = 'blue', bins = int(max_val))
-    b.set_xlabel(feat_name,fontsize=20)
+    b.set_xlabel(feat_name + ' ' + '(' + unit_mapping[feat_name] + ')',fontsize=20)
     b.set_ylabel("Density", fontsize=20)
 
     return fig
@@ -316,6 +329,7 @@ def plot_5y_annualy(df, col):
     fig = px.line(x, x="Time", y=col)
     fig.update_layout(
         width = 800,
+        yaxis_title=col + ' ' + '(' + unit_mapping[col] + ')',
         font=dict(
             
             family="Courier New, monospace",
@@ -334,9 +348,43 @@ def plot_5y_monthly(df, col):
     fig = px.line(x, x="Time", y=col)
     fig.update_layout(
         width = 800,
+        yaxis_title=col + ' ' + '(' + unit_mapping[col] + ')',
         font=dict(
             
             family="Courier New, monospace",
             size=18))
 
     return fig
+
+
+def get_data_msn(tinh,path = r"../../data_sung/tinhthanh_1.xlsx"):
+    data_tinh = pd.read_excel(path)
+    tinh_id = data_tinh.iloc[1].to_dict()[tinh]
+    try:
+        url = "https://www.msn.com/vi-vn/weather/forecast/in-"+tinh_id.replace(" ","-")+",Việt-Nam"
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, "html.parser")
+        titles = soup.findAll('div', class_='overallContainer-E1_1')
+        Time = titles[0].findAll('div', class_='labelUpdatetime-E1_1')[0].string
+        Temp = titles[0].findAll('a', class_='summaryTemperatureCompact-E1_1 summaryTemperatureHover-E1_1')[0].get_text()[0:2]
+        Humidity = titles[0].findAll('a', class_='detailItemGroup-E1_1 detailItemGroupHover-E1_1')[1].findAll('span')[-1].get_text()
+        Pressure = titles[0].findAll('a', class_='detailItemGroup-E1_1 detailItemGroupHover-E1_1')[3].findAll('span')[-1].get_text()
+        DewPoint = titles[0].findAll('a', class_='detailItemGroup-E1_1 detailItemGroupHover-E1_1')[4].findAll('span')[-1].get_text()
+        Wind = (titles[0].findAll('a', class_='detailItemGroup-E1_1 detailItemGroupHover-E1_1')[0].findAll("div")[-1]).get_text()
+        Dir = (titles[0].findAll('a', class_='detailItemGroup-E1_1 detailItemGroupHover-E1_1')[0].findAll("div")[-1]).find("svg")['style'].replace("transform:rotate(","").replace(")","")
+    except:
+        time.sleep(5)
+        url = "https://www.msn.com/vi-vn/weather/forecast/in-"+tinh_id.replace(" ","-")+",Việt-Nam"
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, "html.parser")
+        titles = soup.findAll('div', class_='overallContainer-E1_1')
+        Time = titles[0].findAll('div', class_='labelUpdatetime-E1_1')[0].string
+        Temp = titles[0].findAll('a', class_='summaryTemperatureCompact-E1_1 summaryTemperatureHover-E1_1')[0].get_text()[0:2]
+        Humidity = titles[0].findAll('a', class_='detailItemGroup-E1_1 detailItemGroupHover-E1_1')[1].findAll('span')[-1].get_text()
+        Pressure = titles[0].findAll('a', class_='detailItemGroup-E1_1 detailItemGroupHover-E1_1')[3].findAll('span')[-1].get_text()
+        DewPoint = titles[0].findAll('a', class_='detailItemGroup-E1_1 detailItemGroupHover-E1_1')[4].findAll('span')[-1].get_text()
+        Wind = (titles[0].findAll('a', class_='detailItemGroup-E1_1 detailItemGroupHover-E1_1')[0].findAll("div")[-1]).get_text()
+        Dir = (titles[0].findAll('a', class_='detailItemGroup-E1_1 detailItemGroupHover-E1_1')[0].findAll("div")[-1]).find("svg")['style'].replace("transform:rotate(","").replace(")","")
+
+    return [Pressure,DewPoint + "C"]
+
