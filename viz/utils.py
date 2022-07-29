@@ -1,4 +1,3 @@
-from tkinter import X
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -8,6 +7,14 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
+
+dataset_path = "../../data/vietnam/vietnam_[2017-2022]_fix.csv"
+
+province_path = "/home/primedo/hcmus/DA/Datascience_2016-2/data_sung/tinhthanh.xlsx"
+
+province_path1 = "/home/primedo/hcmus/DA/Datascience_2016-2/data_sung/tinhthanh_1.xlsx"
+
+geo_json_path = "../Vietnam_provinces.geojson"
 
 list_provinces = ['An Giang','Bà Rịa - Vũng Tàu','Bắc Giang','Bắc Kạn','Bạc Liêu','Bắc Ninh',
  'Bến Tre','Bình Định','Bình Dương','Bình Phước','Bình Thuận','Cà Mau','Cần Thơ','Cao Bằng',
@@ -307,7 +314,6 @@ def plotCountAndDistribution(data, feat_name):
     # b.set_xlabel(feat_name,fontsize=20)
     # b.set_ylabel("Density", fonstsize=20)
     max_val = data.max()
-    print(data)
     sns.set(font_scale=1.3)
     fig = plt.figure(figsize = (8,4))
     b= sns.distplot(data, color = 'blue', bins = int(max_val))
@@ -357,7 +363,7 @@ def plot_5y_monthly(df, col):
     return fig
 
 
-def get_data_msn(tinh,path = r"../../data_sung/tinhthanh_1.xlsx"):
+def get_data_msn(tinh,path = province_path1):
     data_tinh = pd.read_excel(path)
     tinh_id = data_tinh.iloc[1].to_dict()[tinh]
     try:
