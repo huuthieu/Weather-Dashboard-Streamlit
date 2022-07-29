@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 from utils import *
+from models import *
 
 st.set_page_config(page_title="Plotting Features", page_icon="📈")
 
@@ -38,7 +39,6 @@ with col3:
         'Choose feature',
         tuple(list_features))
 
-dataset_path = f"../../data/vietnam/vietnam_[2017-2022]_fix.csv"
 df = get_data()
 
 
@@ -112,4 +112,45 @@ with st.spinner('Wait for it...'):
 # Streamlit widgets automatically run the script from top to bottom. Since
 # this button is not connected to any other logic, it just causes a plain
 # rerun.
+
+df["Label"] = df["Weather"].apply(convert_label)
+
+values = df['Label'].value_counts().values
+labels = df['Label'].unique().tolist()
+
+
+st.header(f"Ratio of Rain and No Rain Weather")
+
+colors = ['darkorange', 'blue']
+
+
+fig = go.Figure(
+    go.Pie(
+    labels = ["No Rain","Rain"],
+    values = values,
+    hoverinfo = "value",
+    textinfo = "percent",
+    marker = dict(colors=colors, line=dict(color='#000000', width=2))
+))
+
+fig.update_layout(
+    width = 800,
+    font=dict(
+        family="Courier New, monospace",
+        size=18))
+
+
+st.plotly_chart(fig)
+
+
+st.header(f"Correlation between all features")
+
+df = df.drop(columns = ["Year"])
+# df = df.replace("Label", {"No Rain":0.0, "Rain":1.0})
+
+fig = plt.figure(figsize = (15,10))
+sns.heatmap(df.corr(), cmap = "Greens", annot=True)
+st.write(fig)
+
+
 st.button("Re-run")

@@ -27,7 +27,7 @@ option = st.selectbox(
     'Choose province',
     tuple(list_provinces))
 
-province = pd.read_excel("/home/primedo/hcmus/DA/Datascience_2016-2/data_sung/tinhthanh.xlsx")
+province = pd.read_excel(province_path)
 province_dict = dict(zip(province.columns, province.iloc[0]))
 
 
@@ -36,7 +36,6 @@ url = url.replace("Can-Tho", province_dict[option])
 r = requests.get(url)
 soup = BeautifulSoup(r.text, "html.parser")
 
-print("ok")
 now = datetime.datetime.now()
 
 st.markdown(
@@ -87,7 +86,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-df = pd.read_csv("../../data/vietnam/vietnam_[2017-2022]_fix.csv")
+df = pd.read_csv(dataset_path)
 # genre = st.radio(
 #     "",
 #      options = ('Annualy', 'Monthly'))

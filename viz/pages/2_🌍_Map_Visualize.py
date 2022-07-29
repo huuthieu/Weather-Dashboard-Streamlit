@@ -1,4 +1,3 @@
-from pyparsing import col
 import streamlit as st
 import pandas as pd
 import pydeck as pdk
@@ -41,17 +40,16 @@ with col3:
     # st.subheader("Choose feature")
     option3 = st.selectbox(
      'Choose feature',
-        tuple(list_features))
+        tuple(list_features[:-1]))
 
 @st.experimental_memo
 def get_data(feature, year) -> pd.DataFrame:
-    dataset_path = "../../data/vietnam/vietnam_[2017-2022]_fix.csv"
     data = pd.read_csv(dataset_path)
 
     data = data[data["Year"] == int(year)]
     return data[["Time","Month",feature,"Province"]]
 
-gdf_vn = gpd.read_file('/home/primedo/hcmus/DA/Datascience_2016-2/Vietnam_covid19_maps/Vietnam_provinces.geojson')
+gdf_vn = gpd.read_file(geo_json_path)
 
 
 data = get_data(option3, option1)
@@ -80,7 +78,10 @@ with st.spinner('Wait for it...'):
 
     geosource = GeoJSONDataSource(geojson=plot_data)
 
-    palette = brewer['RdBu'][9]
+    if option3 in ["Temperature","Dew point"]:
+        palette = brewer['RdBu'][9]
+    else:
+        palette = brewer['RdBu'][9][::-1]
 
     color_mapper = LinearColorMapper(palette=palette, low=0, high=np.ceil(1.2 * x[option3].max()))
 

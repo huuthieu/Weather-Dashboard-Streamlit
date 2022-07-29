@@ -17,7 +17,6 @@ st.sidebar.header("DataFrame Visualize")
 
 @st.cache
 def get_data() -> pd.DataFrame:
-    dataset_path = "../../data/vietnam/vietnam_[2017-2022]_fix.csv"
     return pd.read_csv(dataset_path)
 
 
