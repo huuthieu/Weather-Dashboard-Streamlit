@@ -11,6 +11,8 @@ Change the dataset path in ```viz/utils.py```
 
 ![image](Capture1.PNG)
 
+Run Dashboard
+
 ```
 cd ./viz
 streamlit run Hello.py
