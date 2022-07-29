@@ -4,6 +4,7 @@ import statsmodels.api as sm
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (confusion_matrix, accuracy_score)
 import statsmodels.formula.api as smf
+from utils import *
 
 RAINY_LABEL = ['Light drizzle','Light rain','Light rain shower', 'Patchy light drizzle', 'Patchy light rain',
              'Patchy light rain with thunder','Patchy rain possible','Heavy rain','Heavy rain at times',
@@ -38,7 +39,7 @@ def convert_category2numeric(data, columns_name):
         data = data.drop([col], axis=1)
     return data
 
-df = pd.read_csv("../../data/vietnam/vietnam_[2017-2022]_fix.csv")
+df = pd.read_csv(dataset_path)
 
 def prepare(df, prv, data_test):
     if prv != "All":
