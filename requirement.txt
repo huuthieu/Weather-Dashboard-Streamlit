@@ -1,0 +1,13 @@
+plotly
+streamlit
+numpy
+pandas
+geopandas
+pydeck
+altair
+bs4
+statsmodels
+sklearn
+seaborn
+matplotlib
+bokeh
