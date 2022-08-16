@@ -12,7 +12,7 @@ st.sidebar.success("Select a demo above.")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.image("img1.jpg", width = 800)
+    st.image("cover_image.jpg", width = 800)
     
 
 with col2:
